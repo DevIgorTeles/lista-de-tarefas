@@ -29,8 +29,7 @@ const server = http.createServer((req, res) => {
       version: '1.0.0',
       nodeVersion: process.version,
       endpoints: {
-        rest: '/api/...',
-        graphql: '/graphql'
+        rest: '/api/...'
       },
       status: 'Servidor funcionando com Node.js nativo'
     }));
