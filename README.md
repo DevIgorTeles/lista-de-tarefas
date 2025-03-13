@@ -206,99 +206,89 @@ Content-Type: application/json
 #### 2.1 Criar uma Pessoa (Person)
 - Primeiro, crie uma pessoa (obrigatório para criar perfil)
 ```http
-POST /api/persons
+POST /api/person
 Authorization: Bearer seu_token_jwt
 Content-Type: application/json
 
 {
     "name": "João Silva",
-    "email": "joao@example.com",
-    "phone": "11999999999",
-    "birthDate": "1990-01-01",
-    "address": {
-        "street": "Rua Example",
-        "number": "123",
-        "city": "São Paulo",
-        "state": "SP",
-        "zipCode": "01234-567"
-    }
+    "age":15
 }
 ```
 
 #### 2.2 Criar um Perfil (Profile)
 - Após criar a pessoa, crie seu perfil
 ```http
-POST /api/profiles
+POST /api/profile
 Authorization: Bearer seu_token_jwt
 Content-Type: application/json
 
 {
     "personId": "id_da_pessoa_criada",
-    "bio": "Desenvolvedor Full Stack",
-    "skills": ["JavaScript", "Node.js", "MongoDB"],
-    "department": "Tecnologia",
-    "position": "Desenvolvedor Senior",
-    "preferences": {
-        "theme": "dark",
-        "notifications": true,
-        "language": "pt-BR"
-    }
+    "occupation": "Desenvolvedor Full Stack",
+    "phone": "(11) 99999-9999",
+    "address": "Rua Exemplo, 123 - São Paulo, SP"
 }
 ```
 
 #### 2.3 Criar um Projeto
 - Projetos podem ser criados independentemente
+- Campos obrigatórios: `name` e `endDate`
+- Campos opcionais: `description` e `startDate` (default: data atual)
+
 ```http
 POST /api/projects
 Authorization: Bearer seu_token_jwt
 Content-Type: application/json
 
 {
-    "name": "Projeto Website",
-    "description": "Desenvolvimento do novo website",
-    "startDate": "2024-03-15",
-    "endDate": "2024-06-15",
-    "status": "em_andamento",
-    "priority": "alta",
-    "teamMembers": ["id_pessoa_1", "id_pessoa_2"],
-    "tags": ["website", "frontend", "backend"],
-    "budget": 50000,
-    "objectives": [
-        "Desenvolver frontend",
-        "Implementar API",
-        "Realizar testes"
-    ]
+    "name": "Projeto Website",           // Obrigatório
+    "description": "Desenvolvimento do novo website",  // Opcional
+    "startDate": "2024-03-15",          // Opcional (default: data atual)
+    "endDate": "2024-06-15"             // Obrigatório
 }
 ```
 
-#### 2.4 Criar uma Tarefa
-- Pode ser vinculada a um projeto e/ou pessoa
+Exemplo mínimo (apenas campos obrigatórios):
+```json
+{
+    "name": "Projeto Website",
+    "endDate": "2024-06-15"
+}
+```
+
+#### 2.4 Adicionar Tarefa ao Projeto
+- Após criar o projeto, adicione tarefas a ele
+- Todos os campos são obrigatórios
 ```http
-POST /api/tasks
+POST /api/projects/:projectId/tasks
 Authorization: Bearer seu_token_jwt
 Content-Type: application/json
 
 {
-    "title": "Implementar Login",
-    "description": "Criar sistema de autenticação",
-    "dueDate": "2024-04-01",
-    "priority": "alta",
-    "status": "pendente",
-    "personId": "id_da_pessoa",
-    "projectId": "id_do_projeto",
-    "estimatedHours": 8,
-    "tags": ["auth", "backend"],
-    "subtasks": [
-        {
-            "title": "Configurar JWT",
-            "completed": false
-        },
-        {
-            "title": "Criar endpoints",
-            "completed": false
-        }
-    ]
+    "title": "Implementar Login",         // Obrigatório
+    "description": "Criar sistema de autenticação",  // Obrigatório
+    "personId": "id_da_pessoa"            // Obrigatório
 }
+```
+
+#### 2.5 Atualizar Status da Tarefa
+- Marque uma tarefa como concluída
+```http
+PUT /api/projects/:projectId/tasks/:taskId
+Authorization: Bearer seu_token_jwt
+Content-Type: application/json
+
+{
+    "finished": true
+}
+```
+
+#### 2.6 Remover Tarefa do Projeto
+- Remova uma tarefa do projeto
+```http
+DELETE /api/projects/:projectId/tasks/:taskId
+Authorization: Bearer seu_token_jwt
 ```
 
 ### 3. Relacionamentos e Dependências
@@ -307,34 +297,27 @@ Content-Type: application/json
 graph TD
     A[User] --> B[Person]
     B --> C[Profile]
-    B --> D[Task]
-    E[Project] --> D
-    B --> E
+    E[Project] --> D[Task]
+    D --> B
 ```
 
 - **User**: Independente (criar primeiro)
 - **Person**: Independente (criar após user)
 - **Profile**: Requer Person
-- **Project**: Pode ter Persons vinculadas
-- **Task**: Pode ter Person e/ou Project vinculados
+- **Project**: Contém Tasks
+- **Task**: Pertence a um Project e pode ter uma Person responsável
 
 ### 4. Buscas e Filtros
 
-#### 4.1 Listar Tarefas com Filtros
+#### 4.1 Listar Projetos com suas Tarefas
 ```http
-GET /api/tasks?status=pendente&priority=alta&page=1&limit=10
+GET /api/projects
 Authorization: Bearer seu_token_jwt
 ```
 
 #### 4.2 Buscar Tarefas por Pessoa
 ```http
-GET /api/tasks/person/id_da_pessoa
-Authorization: Bearer seu_token_jwt
-```
-
-#### 4.3 Buscar Tarefas por Projeto
-```http
-GET /api/tasks/project/id_do_projeto
+GET /api/projects?person=id_da_pessoa
 Authorization: Bearer seu_token_jwt
 ```
 
@@ -342,23 +325,26 @@ Authorization: Bearer seu_token_jwt
 
 #### 5.1 Atualizar Status de Tarefa
 ```http
-PUT /api/tasks/id_da_tarefa
+PUT /api/projects/:projectId/tasks/:taskId
 Authorization: Bearer seu_token_jwt
 Content-Type: application/json
 
 {
-    "status": "concluida"
+    "finished": true
 }
 ```
 
-#### 5.2 Adicionar Membro ao Projeto
+#### 5.2 Atualizar Projeto
 ```http
-PUT /api/projects/id_do_projeto
+PUT /api/projects/:projectId
 Authorization: Bearer seu_token_jwt
 Content-Type: application/json
 
 {
-    "teamMembers": ["id_pessoa_1", "id_pessoa_2", "id_pessoa_nova"]
+    "name": "Novo Nome do Projeto",      // Obrigatório
+    "description": "Nova descrição",      // Opcional
+    "startDate": "2024-03-20",           // Opcional
+    "endDate": "2024-07-20"              // Obrigatório
 }
 ```
 

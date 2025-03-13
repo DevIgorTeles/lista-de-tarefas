@@ -44,7 +44,7 @@ function Install-Package {
         Write-Host "$PackageName instalado com sucesso!"
     }
     catch {
-        Write-Host "Erro ao instalar $PackageName: $_"
+        Write-Host ("Erro ao instalar " + $PackageName + ": " + $_.Exception.Message)
     }
 }
 
