@@ -1,5 +1,33 @@
 const mongoose = require("mongoose");
 
+const taskSchema = new mongoose.Schema({
+  title: { 
+    type: String, 
+    required: true,
+    trim: true 
+  },
+  description: {
+    type: String,
+    required: true,
+    trim: true
+  },
+  personId: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'Person',
+    required: true
+  },
+  finished: { 
+    type: Boolean,
+    default: false
+  },
+  createdAt: {
+    type: Date,
+    default: Date.now
+  }
+}, {
+  timestamps: true
+});
+
 const projectSchema = new mongoose.Schema({
   name: { 
     type: String, 
@@ -15,12 +43,10 @@ const projectSchema = new mongoose.Schema({
     default: Date.now 
   },
   endDate: { 
-    type: Date 
+    type: Date,
+    required: true
   },
-  tasks: [{ 
-    type: mongoose.Schema.Types.ObjectId, 
-    ref: "Task" 
-  }],
+  tasks: [taskSchema],
   createdAt: {
     type: Date,
     default: Date.now
